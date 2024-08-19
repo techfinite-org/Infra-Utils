@@ -11,4 +11,4 @@ read db_name
 echo "Root Username"
 read root_username
 
-docker compose --project-name $project_name exec bench new-site $site_name --db-name $db_name --db-root-username $root_username
+docker compose --project-name $project_name exec -T backend bench new-site $site_name --db-name $db_name --db-root-username $root_username
