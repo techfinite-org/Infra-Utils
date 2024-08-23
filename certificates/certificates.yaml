@@ -1,0 +1,6 @@
+tls:
+  certificates:
+    - certFile: /configuration/star-claimgenie-ai-bundle.crt #Replace with your Certificate File Path
+      keyFile: /configuration/STAR.claimgenie.ai_key #Replace with your Key File Path
+      stores:
+        - default

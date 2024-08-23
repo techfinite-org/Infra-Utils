@@ -1,0 +1,55 @@
+name: traefik
+services:
+  traefik:
+    command:
+    - --providers.docker=true
+    - --providers.docker.exposedbydefault=false
+    - --entrypoints.http.address=:80
+    - --entrypoints.https.address=:443
+    - --providers.file.directory=${CERTS_DIRECTORY_PATH}
+    - --providers.file.watch=true
+    - --accesslog
+    - --log
+    - --api
+    image: traefik:v2.6
+    labels:
+      traefik.docker.network: traefik-public
+      traefik.enable: "true"
+      traefik.http.middlewares.admin-auth.basicauth.users: admin:${PASSWORD}
+      traefik.http.middlewares.https-redirect.redirectscheme.permanent: "true"
+      traefik.http.middlewares.https-redirect.redirectscheme.scheme: https
+      traefik.http.routers.traefik-public-http.entrypoints: http
+      traefik.http.routers.traefik-public-http.middlewares: https-redirect
+      traefik.http.routers.traefik-public-http.rule: Host(${TRAEFIK_DOMAIN})
+      traefik.http.routers.traefik-public-http.service: api@internal
+      traefik.http.routers.traefik-public-https.entrypoints: https
+      traefik.http.routers.traefik-public-https.middlewares: admin-auth
+      traefik.http.routers.traefik-public-https.rule: Host(${TRAEFIK_DOMAIN})
+      traefik.http.routers.traefik-public-https.service: api@internal
+      traefik.http.routers.traefik-public-https.tls: "true"
+      traefik.http.services.traefik-public.loadbalancer.server.port: "8080"
+    networks:
+      traefik-public: null
+    ports:
+    - mode: ingress
+      target: 80
+      published: "80"
+      protocol: tcp
+    - mode: ingress
+      target: 443
+      published: "443"
+      protocol: tcp
+    restart: unless-stopped
+    volumes:
+    - type: bind
+      source: /home/azureuser/configuration/
+      target: ${CERTS_DIRECTORY_PATH}
+    - type: bind
+      source: /var/run/docker.sock
+      target: /var/run/docker.sock
+      read_only: true
+      bind:
+        create_host_path: true
+networks:
+  traefik-public:
+    name: traefik-public
