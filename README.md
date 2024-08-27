@@ -76,37 +76,42 @@
 5. While Installing MariaDB, it will ask whether to change the root password. Type "yes" and give the New Password for Root. It will ask some other questions like deleting Test user and Test Databases, Reload the privileges.
 
 
-6. Open local.env in any Editor. For vi editor use:
+6. Get into docker-local using command:
+
+    cd docker-local
+
+
+7. Open local.env in any Editor. For vi editor use:
      
     vi local.env
 
 
-7. Replace the Environment variable with your own environment variable.
+8. Replace the Environment variable with your own environment variable.
 
 
-8. To up the docker instance. You have to create directory for sites and redis in Host and have to bind that volume. For that Create the directories sites and redis. To create run the command:
+9. To up the docker instance. You have to create directory for sites and redis in Host and have to bind that volume. For that Create the directories sites and redis. To create run the command:
 
     mkdir sites redis
 
 
-9. To create the volume that bind the sites and redis directory run the command:
+10. To create the volume that bind the sites and redis directory run the command:
 
     docker volume create --driver local --opt type=none --opt device=your_sites_directory_path --opt o=bind sites
 
     docker volume create --driver local --opt type=none --opt device=your_redis_directory_path --opt o=bind redis
 
 
-10. After run the command to up the docker instance:
+11. After run the command to up the docker instance:
 
     docker compose -f docker-compose-local.yaml --env-file local.env up -d
 
 
-11. Now you will get the Frappe Instances. Next you have to create the site. For that run the command:
+12. Now you will get the Frappe Instances. Next you have to create the site. For that run the command:
 
     ./create_site_docker.sh
 
 
-12. It will ask to enter Project Name, Site Name, DB Name, DB Root Username, DB Root Password. After the you will get site.
+13. It will ask to enter Project Name, Site Name, DB Name, DB Root Username, DB Root Password. After the you will get site.
 
 
-13. Open any browser and enter localhost:8080 to access the site.
+14. Open any browser and enter localhost:8080 to access the site.
