@@ -1,0 +1,40 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: claimgenie-erpnext # Replace with your Ingress Name
+  labels:
+    helm.sh/chart: erpnext-6.0.8
+    app.kubernetes.io/name: erpnext
+    app.kubernetes.io/instance: claimgenie # Replace with your Instance Name
+    app.kubernetes.io/version: "v14.17.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - "tef.claimgenie.ai" # Replace with your HostName
+      secretName: claimgenie-tls # Replace with your Secret Name
+  rules:
+    - host: "tef.claimgenie.ai" # Replace with your HostName
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: claimgenie-erpnext
+                port:
+                  number: 8080
+  # Add Multiple when you have multiple site
+    - host: "demo.claimgenie.ai"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: claimgenie-erpnext
+                port:
+                  number: 8080

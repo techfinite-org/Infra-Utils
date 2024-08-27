@@ -1,0 +1,104 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: claimgenie-erpnext-new-site-1 # Replace with your Job Name
+  labels:
+    helm.sh/chart: erpnext-6.0.96
+    app.kubernetes.io/name: erpnext
+    app.kubernetes.io/instance: claimgenie # Replace with your Instance
+    app.kubernetes.io/version: "v14.44.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      serviceAccountName: claimgenie-erpnext # Replace with your service account
+      securityContext:
+        supplementalGroups:
+        - 1000
+      initContainers:
+        - name: validate-config
+          image: "balamurugan1207/claimgenie:latest" # Replace with your Image
+          imagePullPolicy: IfNotPresent
+          command: ["bash", "-c"]
+          args:
+            - >
+              export start=`date +%s`;
+              until [[ -n `grep -hs ^ sites/common_site_config.json | jq -r ".db_host // empty"` ]] && \
+                [[ -n `grep -hs ^ sites/common_site_config.json | jq -r ".redis_cache // empty"` ]] && \
+                [[ -n `grep -hs ^ sites/common_site_config.json | jq -r ".redis_queue // empty"` ]];
+              do
+                echo "Waiting for sites/common_site_config.json to be created";
+                sleep 5;
+                if (( `date +%s`-start > 600 )); then
+                  echo "could not find sites/common_site_config.json with required keys";
+                  exit 1
+                fi
+              done;
+              echo "sites/common_site_config.json found";
+          resources:
+            {}
+          securityContext:
+            capabilities:
+              add:
+              - CAP_CHOWN
+          volumeMounts:
+            - name: sites-dir
+              mountPath: /home/frappe/frappe-bench/sites
+      containers:
+      - name: create-site
+        image: "balamurugan1207/claimgenie:latest" # Replace with your Image
+        imagePullPolicy: IfNotPresent
+        command: ["bash", "-c"]
+        args:
+          - >
+            bench new-site $(SITE_NAME)
+            --no-mariadb-socket
+            --db-type=$(DB_TYPE)
+            --db-host=$(DB_HOST)
+            --db-port=$(DB_PORT)
+            --db-name=$(DB_NAME)
+            --admin-password=$(ADMIN_PASSWORD)
+            --mariadb-root-username=$(DB_ROOT_USER)
+            --mariadb-root-password=$(DB_ROOT_PASSWORD)
+            --install-app=erpnext
+            --install-app=tfs
+            --install-app=agarwals
+            --install-app=tfs_utils
+            ;rm -f currentsite.txt
+        env:
+          - name: "SITE_NAME"
+            value: "demo.claimgenie.ai" # Replace with your HostName
+          - name: "DB_TYPE"
+            value: mariadb
+          - name: "DB_HOST"
+            value: "mariadb.mariadb.svc.cluster.local"
+          - name: "DB_PORT"
+            value: "3306"
+          - name: "DB_ROOT_USER"
+            value: "root"
+          - name: "DB_ROOT_PASSWORD"
+            value: "Password" # Replace with your Password
+          - name: "ADMIN_PASSWORD"
+            value: "admin"
+          - name: "DB_NAME"
+            value: "demo"
+        resources:
+          {}
+        securityContext:
+          capabilities:
+            add:
+            - CAP_CHOWN
+        volumeMounts:
+          - name: sites-dir
+            mountPath: /home/frappe/frappe-bench/sites
+          - name: logs
+            mountPath: /home/frappe/frappe-bench/logs
+      restartPolicy: Never
+      volumes:
+        - name: sites-dir
+          persistentVolumeClaim:
+            claimName: claimgenie-pvc # Replace with your Persistence Claim
+            readOnly: false
+        - name: logs
+          emptyDir: {}
