@@ -14,5 +14,5 @@ curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
 nvm install 18
 sudo apt-get install npm -y
 sudo npm install -g yarn -y
-sudo pip3 install frappe-bench -y
+sudo pip3 install frappe-bench
 sudo apt install python3.10-venv -y
